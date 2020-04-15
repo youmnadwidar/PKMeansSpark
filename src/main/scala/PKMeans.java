@@ -12,6 +12,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 
 
@@ -64,6 +65,8 @@ public class PKMeans {
             }
             return total;
         });
+        List list1 = reducerCentroids.sortByKey().values().collect();
+        System.out.println(list1);
 
 
         this.sc.close();

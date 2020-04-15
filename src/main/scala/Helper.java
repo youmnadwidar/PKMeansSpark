@@ -13,11 +13,11 @@ public class Helper {
 
 
     public static int getClosestCentroid(double[] dataPoint, List<double[]> centroids) {
-        int minDistance = Integer.MAX_VALUE;
+        double minDistance = Integer.MAX_VALUE;
         int minIndex = -1;
 
         for (int i = 0; i < centroids.size(); i++) {
-            int distance = getEuclideanDistance(dataPoint, centroids.get(i));
+            double distance = getEuclideanDistance(dataPoint, centroids.get(i));
             if (distance < minDistance) {
                 minDistance = distance;
                 minIndex = i;
@@ -27,10 +27,10 @@ public class Helper {
 
     }
 
-    private static int getEuclideanDistance(double[] dataPoint, double[] centroid) {
+    public static double getEuclideanDistance(double[] dataPoint, double[] centroid) {
 
-        int sum = 0;
-        for (int i = 0; i < centroid.length; i++) {
+        double sum = 0;
+        for (int i = 0; i < dataPoint.length; i++) {
             double num = dataPoint[i];
             sum += Math.pow((centroid[i] - num), 2);
         }
