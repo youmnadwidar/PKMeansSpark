@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.apache.spark.util.Vector;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -53,20 +54,19 @@ public class PKMeans {
         JavaPairRDD<Integer, double[]> centroids = sc.<Integer, double[]>parallelizePairs(centroidsPairs);
         List<double[]> list = centroids.sortByKey().values().collect();
 
-        JavaPairRDD<Integer, double[]> pointsPair = points.mapToPair(point -> {
+        JavaPairRDD<Integer, Vector> pointsPair = points.mapToPair(point -> {
             int index = Helper.getClosestCentroid(point, list);
-            return new Tuple2<>(index, point);
+            return new Tuple2<>(index, new Vector(point));
         });
 
-        JavaPairRDD<Integer, double[]> reducerCentroids = pointsPair.reduceByKey((point, sum) -> {
-            double[] total = new double[point.length];
-            for (int j = 0; j < point.length; j++) {
-                total[j] = point[j] + sum[j];
+        JavaPairRDD<Integer, Vector> reducerCentroids = pointsPair.reduceByKey((point, sum) -> {
+            double[] total = new double[point.length()];
+            for (int j = 0; j < point.length(); j++) {
+                total[j] = point.apply(j) + sum.apply(j);
             }
-            return total;
+            return new Vector(total);
         });
-        List list1 = reducerCentroids.sortByKey().values().collect();
-        System.out.println(list1);
+        reducerCentroids.saveAsTextFile(outputFile);
 
 
         this.sc.close();
