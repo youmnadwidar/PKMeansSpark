@@ -4,6 +4,7 @@
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -41,7 +42,7 @@ public class PKMeans {
             return point;
         });
 
-        java.util.List<double[]> centroidsRead = new ArrayList<>({1,1,1,1});
+        java.util.List<double[]> centroidsRead = points.takeSample(false,numOfCentroids);
         List<Tuple2<Integer, double[]>> centroidsPairs = new ArrayList<Tuple2<Integer, double[]>>();
         int i = 0;
         for (double[] centroid : centroidsRead) {
