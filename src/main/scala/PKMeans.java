@@ -18,17 +18,25 @@ import scala.Tuple2;
 public class PKMeans {
 
     private String inputFile;
+    private String outputFile;
     private int numOfCentroids;
     JavaSparkContext sc;
 
+    public JavaPairRDD<Integer, Iterable<Vector>> getLastClustering() {
+        return lastClustering;
+    }
+
+    private JavaPairRDD<Integer, Iterable<Vector>> lastClustering;
+
     PKMeans(String input, String output, int num) {
         this.inputFile = input;
+        this.outputFile = output;
         this.numOfCentroids = num;
         SparkConf conf = new SparkConf().setMaster("local").setAppName("KMeans");
         sc = new JavaSparkContext(conf);
     }
 
-    public JavaPairRDD<Integer, Vector> runKMeans(JavaPairRDD<Integer, Vector> centroids) throws IOException {
+    public List<Vector> runKMeans(List<Vector> centroids, int numIteration) throws IOException {
 
         // Load our input data.
         JavaRDD<String> input = sc.textFile(inputFile);
@@ -50,14 +58,15 @@ public class PKMeans {
                 centroidsPairs.add(new Tuple2<Integer, Vector>(i, centroid));
                 i++;
             }
-            centroids = sc.<Integer, Vector>parallelizePairs(centroidsPairs);
+//            centroids = sc.<Integer, Vector>parallelizePairs(centroidsPairs).sortByKey().values().collect();
+            centroids = sc.<Integer, Vector>parallelizePairs(centroidsPairs).sortByKey().values().collect();
+
         }
 
 
-        List<Vector> list = centroids.sortByKey().values().collect();
-
+        List<Vector> finalCentroids = centroids;
         JavaPairRDD<Integer, Vector> pointsPair = points.mapToPair(point -> {
-            int index = Helper.getClosestCentroid(point.elements(), list);
+            int index = Helper.getClosestCentroid(point.elements(), finalCentroids);
             return new Tuple2<>(index, point);
         });
 
@@ -70,8 +79,9 @@ public class PKMeans {
             }
             return new Vector(total);
         });
-
-        return reducerCentroids;
+        lastClustering = pointsPair.groupByKey();
+        reducerCentroids.saveAsTextFile(outputFile + "_" + numIteration);
+        return reducerCentroids.sortByKey().values().collect();
 
 
     }
